@@ -2,14 +2,17 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>UPTAPCalcu</title>
+    <title>UPTAP Calculadora forense</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <style>
         body {
             margin: 0;
             min-height: 100vh;
-            background: 
+            background:
                 linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.65)),
                 url("https://balancemexico.com/wp-content/uploads/2023/10/img_3580-1.jpg")
                 no-repeat center center fixed;
@@ -37,9 +40,7 @@
             margin-bottom: 15px;
         }
 
-        .logo {
-            width: 90px;
-        }
+        .logo { width: 90px; }
 
         h2 { margin: 0; }
 
@@ -61,7 +62,7 @@
         .opcional { color: #feca57; font-size: 0.8em; }
 
         button {
-            margin-top: 20px;
+            margin-top: 15px;
             width: 100%;
             padding: 10px;
             background: #c0392b;
@@ -94,96 +95,148 @@
             text-align: center;
             opacity: 0.85;
         }
+
+        /* PDF */
+        .reporte-pdf {
+            display: none;
+            padding: 25px;
+            font-family: Arial, sans-serif;
+            color: #000;
+            width: 600px;
+            background: #fff;
+        }
     </style>
 </head>
+
 <body>
 
 <div class="contenedor">
-
     <div class="encabezado">
-        <img src="https://sic.gob.mx/images/63228" class="logo" alt="Logo">
+        <img src="https://sic.gob.mx/images/63228" class="logo" alt="Logo institucional">
         <h2>Calculadora Forense</h2>
     </div>
 
     <label for="tempCuerpo">Temperatura del cuerpo (°C) <span class="obligatorio">*</span></label>
-    <input type="number" id="tempCuerpo" placeholder="Ej. 32.5" required>
+    <input type="number" id="tempCuerpo" placeholder="Ej. 32.5" title="Temperatura corporal medida">
 
     <label for="tempAmbiente">Temperatura ambiente (°C) <span class="obligatorio">*</span></label>
-    <input type="number" id="tempAmbiente" placeholder="Ej. 22" required>
+    <input type="number" id="tempAmbiente" placeholder="Ej. 22" title="Temperatura ambiental">
 
-    <label for="hora">Hora de medición (24 h) <span class="obligatorio">*</span></label>
-    <input type="time" id="hora" required>
+    <label for="hora">Hora de medición <span class="obligatorio">*</span></label>
+    <input type="time" id="hora" title="Hora de medición">
 
     <label for="tempInicial">Temperatura inicial (°C) <span class="opcional">(opcional)</span></label>
-    <input type="number" id="tempInicial" placeholder="37">
+    <input type="number" id="tempInicial" placeholder="37" title="Temperatura corporal inicial estimada">
 
     <label for="k">Constante K <span class="opcional">(opcional)</span></label>
-    <input type="number" step="0.01" id="k" placeholder="0.12">
+    <input type="number" step="0.01" id="k" placeholder="0.12" title="Constante de enfriamiento">
 
     <button onclick="calcular()">Calcular</button>
+    <button onclick="exportarPDF()">Exportar PDF</button>
 
     <div class="resultado" id="resultado">
         <h3>Resultado forense</h3>
         <p id="tiempo"></p>
         <p id="horaMuerte"></p>
+        <p id="texto"></p>
     </div>
 
     <div class="footer-info">
         Ley de Enfriamiento de Newton<br>
-        Equipo conformado por:<br>
         Iris Cristina Austria Duarte – 243289<br>
-        Tadeo Emmanuel Ramírez Alfaro - 243099<br>
+        Tadeo Emmanuel Ramírez Alfaro – 243099
     </div>
+</div>
 
+<!-- CONTENEDOR SOLO PARA PDF -->
+<div id="reportePDF" class="reporte-pdf">
+    <h2 style="text-align:center;">Reporte de Análisis Forense</h2>
+    <hr>
+    <p><strong>Método:</strong> Ley de Enfriamiento de Newton</p>
+    <p id="pdfTiempo"></p>
+    <p id="pdfHora"></p>
+    <h4>Conclusión</h4>
+    <p id="pdfTexto" style="text-align:justify;"></p>
+    <hr>
+    <p style="font-size:12px; text-align:center;">
+        EP1 · Unidad 1 · UPTAPCalcu
+    </p>
 </div>
 
 <script>
 function calcular() {
-    const Tc = parseFloat(tempCuerpo.value);
-    const Ta = parseFloat(tempAmbiente.value);
-    const horaInput = hora.value;
+    const Tc = parseFloat(document.getElementById("tempCuerpo").value);
+    const Ta = parseFloat(document.getElementById("tempAmbiente").value);
+    const horaInput = document.getElementById("hora").value;
 
-    let T0 = parseFloat(tempInicial.value);
-    let K = parseFloat(k.value);
+    const T0 = parseFloat(document.getElementById("tempInicial").value) || 37;
+    const K = parseFloat(document.getElementById("k").value) || 0.12;
 
     if (isNaN(Tc) || isNaN(Ta) || !horaInput) {
-        alert("Completa todos los campos obligatorios.");
+        alert("Completa los campos obligatorios.");
         return;
     }
 
     if (Tc <= Ta) {
-        alert("La temperatura del cuerpo debe ser mayor que la del ambiente.");
+        alert("La temperatura corporal debe ser mayor que la ambiental.");
         return;
     }
-
-    if (isNaN(T0)) T0 = 37;
-    if (isNaN(K)) K = 0.12;
 
     const tiempoHoras = (1 / K) * Math.log((T0 - Ta) / (Tc - Ta));
 
     const [h, m] = horaInput.split(":").map(Number);
-    let minutosTotales = h * 60 + m - tiempoHoras * 60;
+    let minutos = h * 60 + m - tiempoHoras * 60;
+    minutos = ((minutos % 1440) + 1440) % 1440;
 
-    minutosTotales = ((minutosTotales % 1440) + 1440) % 1440;
+    const h24 = Math.floor(minutos / 60);
+    const min = Math.floor(minutos % 60).toString().padStart(2, "0");
 
-    let hora24 = Math.floor(minutosTotales / 60);
-    const minFinal = Math.floor(minutosTotales % 60).toString().padStart(2, "0");
-
-    const ampm = hora24 >= 12 ? "PM" : "AM";
-    let hora12 = hora24 % 12;
-    hora12 = hora12 ? hora12 : 12;
+    const ampm = h24 >= 12 ? "PM" : "AM";
+    const h12 = h24 % 12 || 12;
 
     document.getElementById("tiempo").innerHTML =
-        "<strong>Tiempo desde la muerte:</strong> " + tiempoHoras.toFixed(2) + " horas";
+        `<strong>Tiempo desde la muerte:</strong> ${tiempoHoras.toFixed(2)} horas`;
 
     document.getElementById("horaMuerte").innerHTML =
-        "<strong>Hora estimada de la muerte:</strong> " +
-        hora12 + ":" + minFinal + " " + ampm;
+        `<strong>Hora estimada de la muerte:</strong> ${h12}:${min} ${ampm}`;
+
+    document.getElementById("texto").innerHTML =
+        "Con base en la Ley de Enfriamiento de Newton y considerando condiciones ambientales constantes, " +
+        "se estima que el fallecimiento ocurrió aproximadamente " +
+        tiempoHoras.toFixed(2) + " horas antes del momento de la medición.";
+
+    document.getElementById("pdfTiempo").innerHTML =
+        document.getElementById("tiempo").innerHTML;
+
+    document.getElementById("pdfHora").innerHTML =
+        document.getElementById("horaMuerte").innerHTML;
+
+    document.getElementById("pdfTexto").innerText =
+        document.getElementById("texto").innerText;
 
     document.getElementById("resultado").style.display = "block";
+}
+
+function exportarPDF() {
+    const area = document.getElementById("reportePDF");
+    area.style.display = "block";
+
+    html2canvas(area, { scale: 2 }).then(canvas => {
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF("p", "mm", "a4");
+
+        const imgWidth = 190;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        pdf.addImage(canvas, "PNG", 10, 15, imgWidth, imgHeight);
+        pdf.save("Reporte_Forense_UPTAPCalcu.pdf");
+
+        area.style.display = "none";
+    });
 }
 </script>
 
 </body>
 </html>
+
 
