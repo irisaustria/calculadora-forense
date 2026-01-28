@@ -5,105 +5,88 @@
     <title>UPTAP Calculadora forense</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <!-- LIBRERÍAS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <style>
         body {
-            margin: 0;
-            min-height: 100vh;
+            margin:0;
+            min-height:100vh;
             background:
-                linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.65)),
+                linear-gradient(rgba(0,0,0,.65),rgba(0,0,0,.65)),
                 url("https://balancemexico.com/wp-content/uploads/2023/10/img_3580-1.jpg")
                 no-repeat center center fixed;
-            background-size: cover;
-            font-family: Arial, sans-serif;
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            background-size:cover;
+            font-family:Arial,sans-serif;
+            color:white;
+            display:flex;
+            justify-content:center;
+            align-items:center;
         }
 
-        .contenedor {
-            background: rgba(31,42,56,0.95);
-            padding: 25px;
-            border-radius: 14px;
-            width: 95%;
-            max-width: 420px;
-            box-shadow: 0 0 25px rgba(0,0,0,0.6);
+        .contenedor{
+            background:rgba(31,42,56,.95);
+            padding:25px;
+            border-radius:14px;
+            width:95%;
+            max-width:420px;
+            box-shadow:0 0 25px rgba(0,0,0,.6);
         }
 
-        .encabezado {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 15px;
+        .encabezado{
+            display:flex;
+            align-items:center;
+            gap:15px;
+            margin-bottom:15px;
         }
 
-        .logo { width: 90px; }
+        .logo{width:90px;}
+        h2{margin:0;}
 
-        h2 { margin: 0; }
-
-        label {
-            display: block;
-            margin-top: 14px;
-            font-weight: bold;
+        label{display:block;margin-top:14px;font-weight:bold;}
+        input{
+            width:100%;
+            padding:8px;
+            margin-top:5px;
+            border-radius:6px;
+            border:none;
         }
 
-        input {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-            border-radius: 6px;
-            border: none;
+        button{
+            margin-top:15px;
+            width:100%;
+            padding:10px;
+            background:#c0392b;
+            color:white;
+            border:none;
+            border-radius:6px;
+            font-size:16px;
+            cursor:pointer;
+        }
+        button:hover{background:#e74c3c;}
+
+        .resultado{
+            margin-top:20px;
+            padding:15px;
+            background:rgba(0,0,0,.35);
+            border-left:4px solid #e74c3c;
+            border-radius:8px;
+            display:none;
         }
 
-        .obligatorio { color: #ff6b6b; font-size: 0.8em; }
-        .opcional { color: #feca57; font-size: 0.8em; }
-
-        button {
-            margin-top: 15px;
-            width: 100%;
-            padding: 10px;
-            background: #c0392b;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            cursor: pointer;
+        canvas{
+            margin-top:15px;
+            background:white;
+            border-radius:8px;
         }
 
-        button:hover { background: #e74c3c; }
-
-        .resultado {
-            margin-top: 20px;
-            padding: 15px;
-            background: rgba(0,0,0,0.35);
-            border-left: 4px solid #e74c3c;
-            border-radius: 8px;
-            display: none;
-        }
-
-        .resultado h3 {
-            margin-top: 0;
-            color: #feca57;
-        }
-
-        .footer-info {
-            margin-top: 20px;
-            font-size: 0.8em;
-            text-align: center;
-            opacity: 0.85;
-        }
-
-        /* PDF */
-        .reporte-pdf {
-            display: none;
-            padding: 25px;
-            font-family: Arial, sans-serif;
-            color: #000;
-            width: 600px;
-            background: #fff;
+        .footer-info{
+            margin-top:20px;
+            font-size:.8em;
+            text-align:center;
+            opacity:.85;
         }
     </style>
 </head>
@@ -112,24 +95,24 @@
 
 <div class="contenedor">
     <div class="encabezado">
-        <img src="https://sic.gob.mx/images/63228" class="logo" alt="Logo institucional">
+        <img src="https://sic.gob.mx/images/63228" class="logo" alt="Logo">
         <h2>Calculadora Forense</h2>
     </div>
 
-    <label for="tempCuerpo">Temperatura del cuerpo (°C) <span class="obligatorio">*</span></label>
-    <input type="number" id="tempCuerpo" placeholder="Ej. 32.5" title="Temperatura corporal medida">
+    <label for="tempCuerpo">Temperatura del cuerpo (°C) *</label>
+    <input type="number" id="tempCuerpo" placeholder="Ej. 32">
 
-    <label for="tempAmbiente">Temperatura ambiente (°C) <span class="obligatorio">*</span></label>
-    <input type="number" id="tempAmbiente" placeholder="Ej. 22" title="Temperatura ambiental">
+    <label for="tempAmbiente">Temperatura ambiente (°C) *</label>
+    <input type="number" id="tempAmbiente" placeholder="Ej. 22">
 
-    <label for="hora">Hora de medición <span class="obligatorio">*</span></label>
-    <input type="time" id="hora" title="Hora de medición">
+    <label for="hora">Hora de medición *</label>
+    <input type="time" id="hora">
 
-    <label for="tempInicial">Temperatura inicial (°C) <span class="opcional">(opcional)</span></label>
-    <input type="number" id="tempInicial" placeholder="37" title="Temperatura corporal inicial estimada">
+    <label for="tempInicial">Temperatura inicial (°C)</label>
+    <input type="number" id="tempInicial" placeholder="37">
 
-    <label for="k">Constante K <span class="opcional">(opcional)</span></label>
-    <input type="number" step="0.01" id="k" placeholder="0.12" title="Constante de enfriamiento">
+    <label for="k">Constante K</label>
+    <input type="number" step="0.01" id="k" placeholder="0.12">
 
     <button onclick="calcular()">Calcular</button>
     <button onclick="exportarPDF()">Exportar PDF</button>
@@ -139,6 +122,9 @@
         <p id="tiempo"></p>
         <p id="horaMuerte"></p>
         <p id="texto"></p>
+
+        <h4>Gráfica de enfriamiento corporal</h4>
+        <canvas id="grafica"></canvas>
     </div>
 
     <div class="footer-info">
@@ -148,95 +134,100 @@
     </div>
 </div>
 
-<!-- CONTENEDOR SOLO PARA PDF -->
-<div id="reportePDF" class="reporte-pdf">
+<!-- PDF -->
+<div id="reportePDF" style="display:none;padding:25px;font-family:Arial;color:black;width:600px;">
     <h2 style="text-align:center;">Reporte de Análisis Forense</h2>
     <hr>
-    <p><strong>Método:</strong> Ley de Enfriamiento de Newton</p>
     <p id="pdfTiempo"></p>
     <p id="pdfHora"></p>
-    <h4>Conclusión</h4>
+    <h3>Gráfica de enfriamiento corporal</h3>
+    <canvas id="graficaPDF"></canvas>
     <p id="pdfTexto" style="text-align:justify;"></p>
-    <hr>
-    <p style="font-size:12px; text-align:center;">
-        EP1 · Unidad 1 · UPTAPCalcu
-    </p>
 </div>
 
 <script>
-function calcular() {
-    const Tc = parseFloat(document.getElementById("tempCuerpo").value);
-    const Ta = parseFloat(document.getElementById("tempAmbiente").value);
-    const horaInput = document.getElementById("hora").value;
+let chartPantalla;
 
-    const T0 = parseFloat(document.getElementById("tempInicial").value) || 37;
-    const K = parseFloat(document.getElementById("k").value) || 0.12;
+function calcular(){
+    const Tc=parseFloat(tempCuerpo.value);
+    const Ta=parseFloat(tempAmbiente.value);
+    const horaInput=hora.value;
+    const T0=parseFloat(tempInicial.value)||37;
+    const K=parseFloat(k.value)||0.12;
 
-    if (isNaN(Tc) || isNaN(Ta) || !horaInput) {
-        alert("Completa los campos obligatorios.");
+    if(isNaN(Tc)||isNaN(Ta)||!horaInput){
+        alert("Completa los campos obligatorios");
         return;
     }
 
-    if (Tc <= Ta) {
-        alert("La temperatura corporal debe ser mayor que la ambiental.");
-        return;
-    }
+    const tiempoHoras=(1/K)*Math.log((T0-Ta)/(Tc-Ta));
 
-    const tiempoHoras = (1 / K) * Math.log((T0 - Ta) / (Tc - Ta));
+    const [h,m]=horaInput.split(":").map(Number);
+    let mins=h*60+m-tiempoHoras*60;
+    mins=(mins+1440)%1440;
 
-    const [h, m] = horaInput.split(":").map(Number);
-    let minutos = h * 60 + m - tiempoHoras * 60;
-    minutos = ((minutos % 1440) + 1440) % 1440;
+    let h24=Math.floor(mins/60);
+    let min=Math.floor(mins%60).toString().padStart(2,"0");
+    let ampm=h24>=12?"PM":"AM";
+    let h12=h24%12||12;
 
-    const h24 = Math.floor(minutos / 60);
-    const min = Math.floor(minutos % 60).toString().padStart(2, "0");
+    tiempo.innerHTML=`<strong>Tiempo desde la muerte:</strong> ${tiempoHoras.toFixed(2)} horas`;
+    horaMuerte.innerHTML=`<strong>Hora estimada de la muerte:</strong> ${h12}:${min} ${ampm}`;
+    texto.innerHTML=`La gráfica representa la disminución progresiva de la temperatura corporal conforme a la Ley de Enfriamiento de Newton, permitiendo estimar el intervalo pos muerte.`;
 
-    const ampm = h24 >= 12 ? "PM" : "AM";
-    const h12 = h24 % 12 || 12;
+    dibujarGrafica(tiempoHoras,T0,Ta,K);
 
-    document.getElementById("tiempo").innerHTML =
-        `<strong>Tiempo desde la muerte:</strong> ${tiempoHoras.toFixed(2)} horas`;
+    pdfTiempo.innerHTML=tiempo.innerHTML;
+    pdfHora.innerHTML=horaMuerte.innerHTML;
+    pdfTexto.innerHTML=texto.innerHTML;
 
-    document.getElementById("horaMuerte").innerHTML =
-        `<strong>Hora estimada de la muerte:</strong> ${h12}:${min} ${ampm}`;
-
-    document.getElementById("texto").innerHTML =
-        "Con base en la Ley de Enfriamiento de Newton y considerando condiciones ambientales constantes, " +
-        "se estima que el fallecimiento ocurrió aproximadamente " +
-        tiempoHoras.toFixed(2) + " horas antes del momento de la medición.";
-
-    document.getElementById("pdfTiempo").innerHTML =
-        document.getElementById("tiempo").innerHTML;
-
-    document.getElementById("pdfHora").innerHTML =
-        document.getElementById("horaMuerte").innerHTML;
-
-    document.getElementById("pdfTexto").innerText =
-        document.getElementById("texto").innerText;
-
-    document.getElementById("resultado").style.display = "block";
+    resultado.style.display="block";
 }
 
-function exportarPDF() {
-    const area = document.getElementById("reportePDF");
-    area.style.display = "block";
+function dibujarGrafica(tiempo,T0,Ta,K){
+    let labels=[],data=[];
+    for(let t=0;t<=tiempo+1;t+=0.25){
+        labels.push(t.toFixed(2));
+        data.push(Ta+(T0-Ta)*Math.exp(-K*t));
+    }
 
-    html2canvas(area, { scale: 2 }).then(canvas => {
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF("p", "mm", "a4");
+    if(chartPantalla) chartPantalla.destroy();
 
-        const imgWidth = 190;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-        pdf.addImage(canvas, "PNG", 10, 15, imgWidth, imgHeight);
-        pdf.save("Reporte_Forense_UPTAPCalcu.pdf");
-
-        area.style.display = "none";
+    chartPantalla=new Chart(grafica,{
+        type:"line",
+        data:{labels,datasets:[{label:"Temperatura (°C)",data,borderColor:"red"}]},
+        options:{responsive:true}
     });
+}
+
+function exportarPDF(){
+    const area=document.getElementById("reportePDF");
+    area.style.display="block";
+
+    
+    grafica.width = 400; 
+    grafica.height = 300; 
+
+    new Chart(graficaPDF, {
+        type: "line",
+        data: chartPantalla.data,
+        options: { responsive: false }
+    });
+
+    
+    setTimeout(() => {
+        html2canvas(area, { scale: 2 }).then(canvas => {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF("p", "mm", "a4");
+            const w = 190;
+            const h = canvas.height * w / canvas.width;
+            pdf.addImage(canvas, "PNG", 10, 10, w, h);
+            pdf.save("Reporte_Forense_UPTAPCalcu.pdf");
+            area.style.display = "none";
+        });
+    }, 1000); 
 }
 </script>
 
 </body>
 </html>
-
-
