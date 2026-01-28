@@ -138,10 +138,10 @@ function calcular(){
       tiempoTexto=`${(tiempoDesdeMuerte/60).toFixed(2)} horas`;
     }
 
-    horaHall.innerHTML=`🕒 <b>Hora de hallazgo:</b> ${horaHallazgo}`;
-    tiempoMuerte.innerHTML=`⏱️ <b>Tiempo desde la muerte:</b> ${tiempoTexto}`;
-    tiempoEntre.innerHTML=`⏳ <b>Tiempo entre mediciones:</b> ${dt} minutos`;
-    horaMuerte.innerHTML=`⚰️ <b>Hora estimada de la muerte:</b> ${calcularHoraDeMuerte(horaHallazgo,tiempoDesdeMuerte)}`;
+    horaHall.innerHTML=` <b>Hora de hallazgo:</b> ${horaHallazgo}`;
+    tiempoMuerte.innerHTML=` <b>Tiempo desde la muerte:</b> ${tiempoTexto}`;
+    tiempoEntre.innerHTML=` <b>Tiempo entre mediciones:</b> ${dt} minutos`;
+    horaMuerte.innerHTML=` <b>Hora estimada de la muerte:</b> ${calcularHoraDeMuerte(horaHallazgo,tiempoDesdeMuerte)}`;
 
     texto.innerHTML=`El cálculo se realizó usando la Ley de Enfriamiento de Newton 
     con dos mediciones de temperatura corporal y la temperatura ambiente.`;
@@ -169,4 +169,5 @@ function dibujarGrafica(Ta,T0,tiempo){
 </script>
 </body>
 </html>
+
 
