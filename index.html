@@ -1,233 +1,172 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>UPTAP Calculadora forense</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Calculadora Forense - Newton</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- LIBRERÍAS -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <style>
-        body {
-            margin:0;
-            min-height:100vh;
-            background:
-                linear-gradient(rgba(0,0,0,.65),rgba(0,0,0,.65)),
-                url("https://balancemexico.com/wp-content/uploads/2023/10/img_3580-1.jpg")
-                no-repeat center center fixed;
-            background-size:cover;
-            font-family:Arial,sans-serif;
-            color:white;
-            display:flex;
-            justify-content:center;
-            align-items:center;
-        }
-
-        .contenedor{
-            background:rgba(31,42,56,.95);
-            padding:25px;
-            border-radius:14px;
-            width:95%;
-            max-width:420px;
-            box-shadow:0 0 25px rgba(0,0,0,.6);
-        }
-
-        .encabezado{
-            display:flex;
-            align-items:center;
-            gap:15px;
-            margin-bottom:15px;
-        }
-
-        .logo{width:90px;}
-        h2{margin:0;}
-
-        label{display:block;margin-top:14px;font-weight:bold;}
-        input{
-            width:100%;
-            padding:8px;
-            margin-top:5px;
-            border-radius:6px;
-            border:none;
-        }
-
-        button{
-            margin-top:15px;
-            width:100%;
-            padding:10px;
-            background:#c0392b;
-            color:white;
-            border:none;
-            border-radius:6px;
-            font-size:16px;
-            cursor:pointer;
-        }
-        button:hover{background:#e74c3c;}
-
-        .resultado{
-            margin-top:20px;
-            padding:15px;
-            background:rgba(0,0,0,.35);
-            border-left:4px solid #e74c3c;
-            border-radius:8px;
-            display:none;
-        }
-
-        canvas{
-            margin-top:15px;
-            background:white;
-            border-radius:8px;
-        }
-
-        .footer-info{
-            margin-top:20px;
-            font-size:.8em;
-            text-align:center;
-            opacity:.85;
-        }
-    </style>
+<style>
+body{
+    margin:0;
+    min-height:100vh;
+    background:linear-gradient(rgba(0,0,0,.65),rgba(0,0,0,.65)),
+    url("https://balancemexico.com/wp-content/uploads/2023/10/img_3580-1.jpg")
+    no-repeat center center fixed;
+    background-size:cover;
+    font-family:Arial;
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+.contenedor{
+    background:rgba(31,42,56,.95);
+    padding:25px;
+    border-radius:14px;
+    width:95%;
+    max-width:440px;
+}
+label{margin-top:12px;display:block;font-weight:bold;}
+input,button{
+    width:100%;
+    padding:8px;
+    margin-top:5px;
+    border-radius:6px;
+    border:none;
+}
+button{
+    background:#c0392b;
+    color:white;
+    font-size:16px;
+    cursor:pointer;
+}
+button:hover{background:#e74c3c;}
+.resultado{
+    margin-top:20px;
+    padding:15px;
+    background:rgba(0,0,0,.35);
+    display:none;
+    border-left:4px solid #e74c3c;
+}
+canvas{
+    background:white;
+    border-radius:8px;
+    margin-top:10px;
+}
+</style>
 </head>
 
 <body>
-
 <div class="contenedor">
-    <div class="encabezado">
-        <img src="https://sic.gob.mx/images/63228" class="logo" alt="Logo">
-        <h2>Calculadora Forense</h2>
-    </div>
+<h2>Calculadora Forense</h2>
 
-    <label for="tempCuerpo">Temperatura del cuerpo (°C) *</label>
-    <input type="number" id="tempCuerpo" placeholder="Ej. 32">
+<label>Temperatura corporal 1 (°C)</label>
+<input type="number" id="T1">
 
-    <label for="tempAmbiente">Temperatura ambiente (°C) *</label>
-    <input type="number" id="tempAmbiente" placeholder="Ej. 22">
+<label>Temperatura corporal 2 (°C)</label>
+<input type="number" id="T2">
 
-    <label for="hora">Hora de medición *</label>
-    <input type="time" id="hora">
+<label>Tiempo entre mediciones (minutos)</label>
+<input type="number" id="dt">
 
-    <label for="tempInicial">Temperatura inicial (°C)</label>
-    <input type="number" id="tempInicial" placeholder="37">
+<label>Temperatura ambiente (°C)</label>
+<input type="number" id="Ta">
 
-    <label for="k">Constante K</label>
-    <input type="number" step="0.01" id="k" placeholder="0.12">
+<label>Hora en que se encontró el cuerpo</label>
+<input type="time" id="horaHallazgo">
 
-    <button onclick="calcular()">Calcular</button>
-    <button onclick="exportarPDF()">Exportar PDF</button>
+<button onclick="calcular()">Calcular</button>
 
-    <div class="resultado" id="resultado">
-        <h3>Resultado forense</h3>
-        <p id="tiempo"></p>
-        <p id="horaMuerte"></p>
-        <p id="texto"></p>
-
-        <h4>Gráfica de enfriamiento corporal</h4>
-        <canvas id="grafica"></canvas>
-    </div>
-
-    <div class="footer-info">
-        Ley de Enfriamiento de Newton<br>
-        Iris Cristina Austria Duarte – 243289<br>
-        Tadeo Emmanuel Ramírez Alfaro – 243099
-    </div>
+<div class="resultado" id="resultado">
+<p id="horaHall"></p>
+<p id="tiempoMuerte"></p>
+<p id="tiempoEntre"></p>
+<p id="horaMuerte"></p>
+<p id="texto"></p>
+<canvas id="grafica"></canvas>
 </div>
-
-<!-- PDF -->
-<div id="reportePDF" style="display:none;padding:25px;font-family:Arial;color:black;width:600px;">
-    <h2 style="text-align:center;">Reporte de Análisis Forense</h2>
-    <hr>
-    <p id="pdfTiempo"></p>
-    <p id="pdfHora"></p>
-    <h3>Gráfica de enfriamiento corporal</h3>
-    <canvas id="graficaPDF"></canvas>
-    <p id="pdfTexto" style="text-align:justify;"></p>
 </div>
 
 <script>
-let chartPantalla;
+let chart;
+
+function $(id){ return document.getElementById(id); }
+
+function toNum(id){
+  const v=parseFloat($(id).value);
+  if(Number.isNaN(v)) throw new Error(`El campo ${id} es inválido`);
+  return v;
+}
+
+function calcularHoraDeMuerte(horaHallazgo, tiempoDesdeMuerte){
+  const [h,m]=horaHallazgo.split(":").map(Number);
+  let totalMin=h*60+m-tiempoDesdeMuerte;
+  if(totalMin<0) totalMin+=1440;
+
+  const hh=Math.floor(totalMin/60);
+  const mm=Math.round(totalMin%60);
+  const ampm=hh>=12?"PM":"AM";
+  const h12=hh%12||12;
+
+  return `${h12}:${mm.toString().padStart(2,"0")} ${ampm}`;
+}
+
+function calcularNewton(Ta,T0,t1,T1,t2,T2){
+  const C=T1-Ta;
+  const k=-(1/(t2-t1))*Math.log((T2-Ta)/C);
+  return (1/k)*Math.log((T0-Ta)/C); // minutos
+}
 
 function calcular(){
-    const Tc=parseFloat(tempCuerpo.value);
-    const Ta=parseFloat(tempAmbiente.value);
-    const horaInput=hora.value;
-    const T0=parseFloat(tempInicial.value)||37;
-    const K=parseFloat(k.value)||0.12;
+  try{
+    const T1=toNum("T1");
+    const T2=toNum("T2");
+    const dt=toNum("dt");
+    const Ta=toNum("Ta");
+    const horaHallazgo=$("horaHallazgo").value;
+    if(!horaHallazgo) throw new Error("Ingresa la hora de hallazgo");
 
-    if(isNaN(Tc)||isNaN(Ta)||!horaInput){
-        alert("Completa los campos obligatorios");
-        return;
+    const tiempoDesdeMuerte=calcularNewton(Ta,37,0,T1,dt,T2);
+
+    // ✅ FORMATO CORRECTO DE TIEMPO
+    let tiempoTexto="";
+    if(tiempoDesdeMuerte<60){
+      tiempoTexto=`${tiempoDesdeMuerte.toFixed(0)} minutos`;
+    }else{
+      tiempoTexto=`${(tiempoDesdeMuerte/60).toFixed(2)} horas`;
     }
 
-    const tiempoHoras=(1/K)*Math.log((T0-Ta)/(Tc-Ta));
+    horaHall.innerHTML=`🕒 <b>Hora de hallazgo:</b> ${horaHallazgo}`;
+    tiempoMuerte.innerHTML=`⏱️ <b>Tiempo desde la muerte:</b> ${tiempoTexto}`;
+    tiempoEntre.innerHTML=`⏳ <b>Tiempo entre mediciones:</b> ${dt} minutos`;
+    horaMuerte.innerHTML=`⚰️ <b>Hora estimada de la muerte:</b> ${calcularHoraDeMuerte(horaHallazgo,tiempoDesdeMuerte)}`;
 
-    const [h,m]=horaInput.split(":").map(Number);
-    let mins=h*60+m-tiempoHoras*60;
-    mins=(mins+1440)%1440;
+    texto.innerHTML=`El cálculo se realizó usando la Ley de Enfriamiento de Newton 
+    con dos mediciones de temperatura corporal y la temperatura ambiente.`;
 
-    let h24=Math.floor(mins/60);
-    let min=Math.floor(mins%60).toString().padStart(2,"0");
-    let ampm=h24>=12?"PM":"AM";
-    let h12=h24%12||12;
-
-    tiempo.innerHTML=`<strong>Tiempo desde la muerte:</strong> ${tiempoHoras.toFixed(2)} horas`;
-    horaMuerte.innerHTML=`<strong>Hora estimada de la muerte:</strong> ${h12}:${min} ${ampm}`;
-    texto.innerHTML=`La gráfica representa la disminución progresiva de la temperatura corporal conforme a la Ley de Enfriamiento de Newton, permitiendo estimar el intervalo pos muerte.`;
-
-    dibujarGrafica(tiempoHoras,T0,Ta,K);
-
-    pdfTiempo.innerHTML=tiempo.innerHTML;
-    pdfHora.innerHTML=horaMuerte.innerHTML;
-    pdfTexto.innerHTML=texto.innerHTML;
-
+    dibujarGrafica(Ta,37,tiempoDesdeMuerte);
     resultado.style.display="block";
+  }catch(e){
+    alert(e.message);
+  }
 }
 
-function dibujarGrafica(tiempo,T0,Ta,K){
-    let labels=[],data=[];
-    for(let t=0;t<=tiempo+1;t+=0.25){
-        labels.push(t.toFixed(2));
-        data.push(Ta+(T0-Ta)*Math.exp(-K*t));
-    }
-
-    if(chartPantalla) chartPantalla.destroy();
-
-    chartPantalla=new Chart(grafica,{
-        type:"line",
-        data:{labels,datasets:[{label:"Temperatura (°C)",data,borderColor:"red"}]},
-        options:{responsive:true}
-    });
-}
-
-function exportarPDF(){
-    const area=document.getElementById("reportePDF");
-    area.style.display="block";
-
-    
-    grafica.width = 400; 
-    grafica.height = 300; 
-
-    new Chart(graficaPDF, {
-        type: "line",
-        data: chartPantalla.data,
-        options: { responsive: false }
-    });
-
-    
-    setTimeout(() => {
-        html2canvas(area, { scale: 2 }).then(canvas => {
-            const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF("p", "mm", "a4");
-            const w = 190;
-            const h = canvas.height * w / canvas.width;
-            pdf.addImage(canvas, "PNG", 10, 10, w, h);
-            pdf.save("Reporte_Forense_UPTAPCalcu.pdf");
-            area.style.display = "none";
-        });
-    }, 1000); 
+function dibujarGrafica(Ta,T0,tiempo){
+  let labels=[],data=[];
+  const k=0.01;
+  for(let t=0;t<=tiempo+30;t+=5){
+    labels.push((t/60).toFixed(2));
+    data.push(Ta+(T0-Ta)*Math.exp(-k*t));
+  }
+  if(chart) chart.destroy();
+  chart=new Chart(grafica,{
+    type:"line",
+    data:{labels,datasets:[{label:"Temperatura corporal (°C)",data,fill:false,borderColor:"red"}]}
+  });
 }
 </script>
-
 </body>
 </html>
+
