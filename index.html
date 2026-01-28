@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Calculadora Forense - Newton</title>
+<title>Calculadora Forense - Ley de Newton</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -26,7 +26,7 @@ body{
     padding:25px;
     border-radius:14px;
     width:95%;
-    max-width:440px;
+    max-width:450px;
 }
 label{margin-top:12px;display:block;font-weight:bold;}
 input,button{
@@ -62,19 +62,19 @@ canvas{
 <div class="contenedor">
 <h2>Calculadora Forense</h2>
 
-<label>Temperatura corporal 1 (°C)</label>
+<label for="T1">Temperatura corporal 1 (°C)</label>
 <input type="number" id="T1">
 
-<label>Temperatura corporal 2 (°C)</label>
+<label for="T2">Temperatura corporal 2 (°C)</label>
 <input type="number" id="T2">
 
-<label>Tiempo entre mediciones (minutos)</label>
+<label for="dt">Tiempo entre mediciones (minutos)</label>
 <input type="number" id="dt">
 
-<label>Temperatura ambiente (°C)</label>
+<label for="Ta">Temperatura ambiente (°C)</label>
 <input type="number" id="Ta">
 
-<label>Hora en que se encontró el cuerpo</label>
+<label for="horaHallazgo">Hora en que se encontró el cuerpo</label>
 <input type="time" id="horaHallazgo">
 
 <button onclick="calcular()">Calcular</button>
@@ -100,23 +100,17 @@ function toNum(id){
   return v;
 }
 
-function calcularHoraDeMuerte(horaHallazgo, tiempoDesdeMuerte){
+function calcularHoraDeMuerte(horaHallazgo, minutos){
   const [h,m]=horaHallazgo.split(":").map(Number);
-  let totalMin=h*60+m-tiempoDesdeMuerte;
-  if(totalMin<0) totalMin+=1440;
+  let total=h*60+m-minutos;
+  if(total<0) total+=1440;
 
-  const hh=Math.floor(totalMin/60);
-  const mm=Math.round(totalMin%60);
+  const hh=Math.floor(total/60);
+  const mm=Math.round(total%60);
   const ampm=hh>=12?"PM":"AM";
   const h12=hh%12||12;
 
   return `${h12}:${mm.toString().padStart(2,"0")} ${ampm}`;
-}
-
-function calcularNewton(Ta,T0,t1,T1,t2,T2){
-  const C=T1-Ta;
-  const k=-(1/(t2-t1))*Math.log((T2-Ta)/C);
-  return (1/k)*Math.log((T0-Ta)/C); // minutos
 }
 
 function calcular(){
@@ -126,48 +120,79 @@ function calcular(){
     const dt=toNum("dt");
     const Ta=toNum("Ta");
     const horaHallazgo=$("horaHallazgo").value;
+    const T0=37;
+
     if(!horaHallazgo) throw new Error("Ingresa la hora de hallazgo");
 
-    const tiempoDesdeMuerte=calcularNewton(Ta,37,0,T1,dt,T2);
+    // VALIDACIÓN FÍSICA
+    if(!(T1 > T2 && T2 > Ta)){
+      throw new Error("Debe cumplirse: T1 > T2 > Ta");
+    }
 
-    // ✅ FORMATO CORRECTO DE TIEMPO
+    if(dt <= 0){
+      throw new Error("El tiempo entre mediciones debe ser mayor a 0");
+    }
+
+    // LEY DE NEWTON
+    const C = T1 - Ta;
+    const ratio = (T2 - Ta) / C;
+    const k = -(1/dt) * Math.log(ratio);
+
+    if(k <= 0){
+      throw new Error("Datos inconsistentes para el cálculo");
+    }
+
+    const tiempoDesdeMuerte =
+      (1/k) * Math.log((T0 - Ta) / C); // MINUTOS
+
+    // FORMATO DE TIEMPO
     let tiempoTexto="";
-    if(tiempoDesdeMuerte<60){
-      tiempoTexto=`${tiempoDesdeMuerte.toFixed(0)} minutos`;
+    if(tiempoDesdeMuerte < 60){
+      tiempoTexto = `${tiempoDesdeMuerte.toFixed(0)} minutos`;
     }else{
-      tiempoTexto=`${(tiempoDesdeMuerte/60).toFixed(2)} horas`;
+      tiempoTexto = `${(tiempoDesdeMuerte/60).toFixed(2)} horas`;
     }
 
     horaHall.innerHTML=` <b>Hora de hallazgo:</b> ${horaHallazgo}`;
     tiempoMuerte.innerHTML=` <b>Tiempo desde la muerte:</b> ${tiempoTexto}`;
     tiempoEntre.innerHTML=` <b>Tiempo entre mediciones:</b> ${dt} minutos`;
-    horaMuerte.innerHTML=` <b>Hora estimada de la muerte:</b> ${calcularHoraDeMuerte(horaHallazgo,tiempoDesdeMuerte)}`;
+    horaMuerte.innerHTML=` <b>Hora estimada de la muerte:</b> ${calcularHoraDeMuerte(horaHallazgo, tiempoDesdeMuerte)}`;
 
-    texto.innerHTML=`El cálculo se realizó usando la Ley de Enfriamiento de Newton 
-    con dos mediciones de temperatura corporal y la temperatura ambiente.`;
+    texto.innerHTML=`El resultado se obtuvo aplicando estrictamente la Ley de Enfriamiento de Newton
+    utilizando dos mediciones de temperatura corporal y la temperatura ambiente.`;
 
-    dibujarGrafica(Ta,37,tiempoDesdeMuerte);
+    dibujarGrafica(Ta, T0, k, tiempoDesdeMuerte);
+
     resultado.style.display="block";
   }catch(e){
     alert(e.message);
   }
 }
 
-function dibujarGrafica(Ta,T0,tiempo){
+function dibujarGrafica(Ta,T0,k,tiempo){
   let labels=[],data=[];
-  const k=0.01;
-  for(let t=0;t<=tiempo+30;t+=5){
+  for(let t=0;t<=tiempo+20;t+=5){
     labels.push((t/60).toFixed(2));
     data.push(Ta+(T0-Ta)*Math.exp(-k*t));
   }
   if(chart) chart.destroy();
   chart=new Chart(grafica,{
     type:"line",
-    data:{labels,datasets:[{label:"Temperatura corporal (°C)",data,fill:false,borderColor:"red"}]}
+    data:{
+      labels,
+      datasets:[{
+        label:"Temperatura corporal (°C)",
+        data,
+        borderColor:"red",
+        fill:false
+      }]
+    }
   });
 }
 </script>
 </body>
 </html>
+
+
 
 
